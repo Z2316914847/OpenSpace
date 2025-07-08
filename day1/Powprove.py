@@ -6,7 +6,7 @@ import time
 #   再次运算直到满足 5 个 0 开头的哈希值，打印出花费的时间、Hash 的内容及Hash值。
 
 
-# 参数：name: 你的昵称，leading_zeros: 目标哈希值前导零的数量
+# 参数：name: 昵称，leading_zeros: 目标哈希值前导零的数量
 def pow_prove(name, leading_zeros):
     nonce = 0;
     target_Difficulty = '0' * leading_zeros  # 目标难度，4个或5个0开头
@@ -15,19 +15,20 @@ def pow_prove(name, leading_zeros):
     # 不断调整 nonce ，直到满足条件：Hash <= target_Difficulty(同一个意思前导零数量 >= leading_zeros)
     while True:
         # 拼接昵称 ＋ nonce
-        input_string = f"{name}{nonce}"
+        name_add_nonce = f"{name}{nonce}"
         
         # 根据拼接昵称 ＋ nonce 计算哈希值，并调用 hexdigest() 函数将二进制转发为十六进制字符串
-        hash_result = hashlib.sha256(input_string.encode()).hexdigest()
+        hash_result = hashlib.sha256(name_add_nonce.encode()).hexdigest()
 
         # 判断哈希值是否满足条件：Hash <= target_Difficulty(同一个意思前导零数量 >= leading_zeros)
         if hash_result.startswith(target_Difficulty):
             # 如果满足条件，打印结果
             end_time = time.time()  # 记录结束时间
             spend_time = end_time - start_time
-            print(f"spend_time:{spend_time}, hash_content: {input_string}, Hash_result: {hash_result}, ")
+            print(f"spend_time:{spend_time}, hash_content: {name_add_nonce}, Hash_result: {hash_result}, ")
             break
             # break spend_time;
+
         nonce = nonce + 1;
 
 # 我的昵称
@@ -38,7 +39,7 @@ pow_prove(name, 4)
 pow_prove(name, 5)
 
 
-# ------------------------------------  增加一个0，寻找nonce消耗time    ------------------------------- 
+# ------------------------------------  难度目标增加一个0，寻找 nonce 消耗 time 的倍数变化    ------------------------------- 
 
 # time_4zeros = pow_prove(name, 4)
 # time_5zeros = pow_prove(name, 5)
