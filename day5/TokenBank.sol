@@ -99,7 +99,7 @@ contract TokenBank{
     }
 
     function withdraw(address to,uint256 amount) public {
-        require(deposits[msg.sender] < amount, "The balance amount less than deposit money!");
+        require(deposits[msg.sender] > amount, "The balance amount less than deposit money!");
         deposits[msg.sender]  =deposits[msg.sender] - amount;
         payable(to).transfer(amount);
         emit WithdrawMoney(to, amount);  
