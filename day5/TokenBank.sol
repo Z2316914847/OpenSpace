@@ -77,13 +77,17 @@ contract BaseERC20{
 contract TokenBank{
     string public name; 
     string public symbol;
-    uint256 public totalSupply;   
+    BaseERC20 public token;   
     uint public LESS_MONEY = 0.01 ether;   
 
     mapping (address => uint256) deposits; 
     event depositMoney( address, uint256 );
     event WithdrawMoney( address, uint256 );
 
+    constructor(){
+        token = new BaseERC20();
+        // address = BaseERC20_Address,后续通过底层调用即可
+    }
 
     receive() external payable { }
 
@@ -93,15 +97,16 @@ contract TokenBank{
     }
 
 
-    function deposit() public lessMoney payable {
-        deposits[msg.sender] = deposits[msg.sender] + msg.value;
-        emit  depositMoney( msg.sender, msg.value );
+    function deposit(uint256 amount) public lessMoney payable {
+        require(token.transferFrom(msg.sender, address(this), amount),"tranfer failed!" );
+        deposits[msg.sender] = deposits[msg.sender] + amount;
+        emit  depositMoney( msg.sender, amount );
     }
 
     function withdraw(address to,uint256 amount) public {
         require(deposits[msg.sender] > amount, "The balance amount less than deposit money!");
-        deposits[msg.sender]  =deposits[msg.sender] - amount;
-        payable(to).transfer(amount);
+        deposits[msg.sender]  = deposits[msg.sender] - amount;
+        require(token.transfer(msg.sender, amount), "Transfer failed");
         emit WithdrawMoney(to, amount);  
     }    
 }
