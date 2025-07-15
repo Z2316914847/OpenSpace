@@ -54,7 +54,8 @@ contract BaseERC20{
         // 下面这段代码有问题，allowances[_from][_spender]  = allowances[_from][_spender] - _value;
         // allowances[_from][msg.sender]  = allowances[_from][msg.sender] - _value;
         emit Transfer(_from, _to, _value); 
-        return true; 
+        return true;
+        // 
     }
 
     // 允许 Token 的所有者批准某个地址消费他们的一部分Token（approve），msg.sender:授权地址，_spender：被授权地址，
