@@ -7,114 +7,105 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 // import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol";
 
-
+/*
+假如这个合约部署，构造函数需要名称、代号、一个图片/视频等等的(他们放在去中性化节点上，这个图片的hash，hash由去中性化节点提供)
+*/
 contract BaseERC721 {
     using Strings for uint256;
     using Address for address;
 
-    // Token name
+    // Token名称
     string private _name;
 
-    // Token symbol
+    // Token代号
     string private _symbol;
 
-    // Token baseURI
-    string private _baseURI;  // xxxxx 地址都为5个x  拼接 tokenId 生成完整的元数据 URL（如 https://api.example.com/nfts/1）_baseURI = "ipfs://QmXyZ/"; tokenURI(1) 返回 "ipfs://QmXyZ/1"
+    // 固定值，_baseURI 是所有 NFT 共享的基础路径。拼接 tokenId 生成完整的元数据URL（如 https://api.example.com/nfts/1），:_baseURI = "ipfs://QmXyZ/"; tokenURI(1) 返回 "ipfs://QmXyZ/1"
+    string private _baseURI;  
 
-    // Mapping from token ID to owner address
-    mapping(uint256 => address) private _owners;  // 所有权映射  记录每个 tokenId 的当前所有者地址
+    // 所有权映射  记录每个 tokenId 的当前所有者地址
+    mapping(uint256 => address) private _owners;  
 
-    // Mapping owner address to token count
-    mapping(address => uint256) private _balances;  // 记录每个地址拥有的 NFT 数量
+    // 记录每个地址拥有的 NFT 数量：这段话他想说的是，一个地址可以拥有多个NFT，，我即想有蔡徐坤，又想拥有迪丽热巴，还想拥有邓超
+    mapping(address => uint256) private _balances;  
 
-    // Mapping from token ID to approved address
-    mapping(uint256 => address) private _tokenApprovals;  // 授权管理  记录每个 tokenId 的授权操作者地址
+    // 授权管理  记录每个 tokenId 的授权操作者地址
+    mapping(uint256 => address) private _tokenApprovals;  
 
-    // Mapping from owner to operator approvals
-    mapping(address => mapping(address => bool)) private _operatorApprovals;  // 记录全局授权状态（所有者是否授权某操作者管理其所有 NFT）第一层：address owner（NFT 所有者地址）第二层：address operator（被授权操作者地址）.​值​：bool（是否授权）
+    // 记录全局授权状态（所有者是否授权某操作者管理其所有 NFT）第一层：address owner（NFT 所有者地址）第二层：address operator（被授权操作者地址）.​值​：bool（是否授权）
+    mapping(address => mapping(address => bool)) private _operatorApprovals;  
 
-
-    /**
-     * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
-     */
     event Transfer(
         address indexed from,
         address indexed to,
         uint256 indexed tokenId
     );
 
-    /**
-     * @dev Emitted when `owner` enables `approved` to manage the `tokenId` token.
-     */
     event Approval(
         address indexed owner,
         address indexed approved,
         uint256 indexed tokenId
     );
 
-    /**
-     * @dev Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets.
-     */
     event ApprovalForAll(
         address indexed owner,
         address indexed operator,
         bool approved
     );
 
-    /**
-     * @dev Initializes the contract by setting a `name`, a `symbol` and a `baseURI` to the token collection.
-     */
     constructor(
         string memory name_,
         string memory symbol_,
         string memory baseURI_
     ) {
         /**code*/
-        _name = "Wahaha";
-        _symbol = "Wahaha";
-        _baseURI = "xxxxx";
+        _name = name_;
+        _symbol = symbol_;
+        _baseURI = baseURI_;
 
     }
 
-    /**
-     * @dev See {IERC165-supportsInterface}.
-     */
+    // 实现IERC165，合约必须实现supportsInterface ，参数是 接口address，把address转为bytes4，因为只需要4个字节
+    // 检查 interfaceId 是否等于 ERC721 标准接口的标识符。true：表示目标合约实现了 ERC721 接口，false：未实现
+    // 钱包/交易所调用 supportsInterface(0x80ac58cd) 确认合约是合法的 ERC721 实现。
     function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
             interfaceId == 0x80ac58cd || // ERC165 Interface ID for ERC721
             interfaceId == 0x5b5e139f;   // ERC165 Interface ID for ERC721Metadata
+        // 两种方法相等，通过 type() 获取接口的唯一标识符
+        // return interfaceId == type(IERC721).interfaceId ||
+        //     interfaceId == type(IERC165).interfaceId ||
+        //     interfaceId == type(IERC721Metadata);
     }
     
-    /**
-     * @dev See {IERC721Metadata-name}.
-     */
     function name() public view returns (string memory) {
         /**code*/
         return _name;
     }
 
-   
     function symbol() public view returns (string memory) {
         /**code*/
         return _symbol;
     }
 
+    // 实现IERC721Metadata(这个接口是为了扩展ERC721)的TokenURI函数，MetaData。
     function tokenURI(uint256 tokenId) public view returns (string memory) {
         /**code*/
         require(_exists(tokenId),"ERC721Metadata: URI query for nonexistent token");
 
         // should return baseURI
-        /**code*/
-        // return Address.toHexString(owners[tokenId]);
-        return string(abi.encodePacked(_baseURI, tokenId.toString()));
+        string memory baseURI = _baseURI;
+        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, tokenId.toString())): "";
     }
 
+    // 铸造一个 NFT
     function mint(address to, uint256 tokenId) public {
+        // 判断 tokenId是否存在，存在的话，说明唯一的NFT存在，不能铸造
+        // 地址不为空
         require( to!=address(0), "ERC721: mint to the zero address");
         require(!_exists(tokenId), "ERC721: token already minted");
 
-        /**code*/
         // 记录 token 所有者
         _owners[tokenId] = to;
     
@@ -123,22 +114,24 @@ contract BaseERC721 {
         emit Transfer(address(0), to, tokenId);
     }
 
+    // 查看某个地址的NFT的tokenId集合
     function balanceOf(address owner) public view returns (uint256) {
         /**code*/
         return _balances[owner];
     }
-
+    // 查看某个地址的某个TokenId
     function ownerOf(uint256 tokenId) public view returns (address) {
         /**code*/
         return _owners[tokenId];
     }
 
+    // 某个NFT的所有者，把这个TokenId的NFT授权给to地址，注意to不可以是原本的所有者
     function approve(address to, uint256 tokenId) public {
         /**code*/
-        address owner = ownerOf(tokenId);  // 上一任NFT所有者
-        require(to != owner, "ERC721: approval to current owner");  // 不能自己给自己
-
-        require(msg.sender == owner || isApprovedForAll(owner, msg.sender), "ERC721: approve caller is not owner nor approved for all");
+        // address owner = ownerOf(tokenId);  // NFT 所有者
+        require(to != ownerOf(tokenId), "ERC721: approval to current owner");  // 不能自己给自己
+        // 判断两种情况，符合一种即满足NFT转让。第一种是NFT所有者转让NFT，第二种是NFT授权者转让NFT
+        require(msg.sender == ownerOf(tokenId) || isApprovedForAll(ownerOf(tokenId), msg.sender), "ERC721: approve caller is not owner nor approved for all");
        _approve(to, tokenId);
     }
 
@@ -150,12 +143,13 @@ contract BaseERC721 {
 
     function setApprovalForAll(address operator, bool approved) public {
         /**code*/
-        address sender = msg.sender;
-        require(operator != sender, "ERC721: approve to caller");
-        _operatorApprovals[sender][operator] = approved;
-        emit ApprovalForAll(sender, operator, approved);
+        // address sender = msg.sender;
+        require(operator != msg.sender, "ERC721: approve to caller");
+        _operatorApprovals[msg.sender][operator] = approved;
+        emit ApprovalForAll(msg.sender, operator, approved);
     }
 
+    // 查询记录，查询NFT所有者是否授权他人的 
     function isApprovedForAll(
         address owner,
         address operator
@@ -269,11 +263,7 @@ contract BaseERC721 {
         emit Transfer(from, to, tokenId);
     }
 
-    /**
-     * @dev Approve `to` to operate on `tokenId`
-     *
-     * Emits a {Approval} event.
-     */
+    // 
     function _approve(address to, uint256 tokenId) internal virtual {
         /**code*/
         _tokenApprovals[tokenId] = to;
@@ -313,7 +303,7 @@ contract BaseERC721 {
                     );
                 } else {
                     assembly {
-                        revert(add(32, reason), mload(reason))
+                        revert(add(32, reason), mload(reason));
                     }
                 }
             }

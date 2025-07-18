@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.27;
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol";
-
+// token(代币，货币，简称 token == 美元/人民币/欧元/日元)，刚好ERC20协议规定了货币必须要实现的功能
 contract BaseERC20 {
     string public name; 
     string public symbol; 

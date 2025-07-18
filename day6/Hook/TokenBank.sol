@@ -2,6 +2,7 @@
 pragma solidity 0.8.27;
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol";
 import "111/day6/ERC20.sol";
+// token和tokenBank关系：货币资产(token)和银行(tokenBank)，在区块链上，token的发行量由token约定，转账只不过是钱从这个地址转到另一个地址
 
 contract TokenBank{
     string public name; 
