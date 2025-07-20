@@ -1,0 +1,13 @@
+ forge test test/Bank.t.sol
+[⠊] Compiling...
+[⠔] Compiling 1 files with Solc 0.8.25
+[⠒] Solc 0.8.25 finished in 1.34s
+Compiler run successful!
+
+Ran 3 tests for test/Bank.t.sol:BankTest
+[PASS] test_onlyOwner() (gas: 694923)
+[PASS] test_top3() (gas: 259345)
+[PASS] test_withDraw() (gas: 92092)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 18.23ms (6.72ms CPU time)
+
+Ran 1 test suite in 70.78ms (18.23ms CPU time): 3 tests passed, 0 failed, 0 skipped (3 total tests)
